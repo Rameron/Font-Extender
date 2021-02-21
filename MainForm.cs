@@ -137,8 +137,8 @@ namespace Font_Extender
 
                 if (!File.Exists(_ttxLocation))
                 {
-                    MessageBox.Show($"TTX file couldn't create. Please install 'fonttools' and try again.");
-                    Application.Exit();
+                    MessageBox.Show(this, $"TTX file couldn't create. Please install 'fonttools' and try again.", "TTX wasn't created", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Environment.Exit(0);
                 }
             }
 
@@ -154,29 +154,29 @@ namespace Font_Extender
 
             if (!Directory.Exists(fontsDirectoryPath))
             {
-                MessageBox.Show($"The directory 'Fonts' doesn't exist. Please create it and copy ttf font file with name ended with '{ORIGINAL_FONT_FILE_ENDS}' in it.");
-                Application.Exit();
+                MessageBox.Show(this, $"The directory 'Fonts' doesn't exist. Please create it and copy ttf font file with name ended with '{ORIGINAL_FONT_FILE_ENDS}' in it.", "Directory not exist", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(0);
             }
 
             string[] fontsDirectoryFiles = Directory.GetFiles(fontsDirectoryPath);
 
             if (fontsDirectoryFiles.Length == 0)
             {
-                MessageBox.Show($"The directory 'Fonts' is empty. Please create it and copy ttf font file with name ended with '{ORIGINAL_FONT_FILE_ENDS}' in it.");
-                Application.Exit();
+                MessageBox.Show(this, $"The directory 'Fonts' is empty. Please create it and copy ttf font file with name ended with '{ORIGINAL_FONT_FILE_ENDS}' in it.", "Directory is empty", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(0);
             }
 
             int originalFontFileCount = fontsDirectoryFiles.Count(f => f.EndsWith("_orig.ttf"));
 
             if (originalFontFileCount > 1)
             {
-                MessageBox.Show($"The directory 'Fonts' has more than one ttf font file with name ended with '{ORIGINAL_FONT_FILE_ENDS}'. Please left only one in it.");
-                Application.Exit();
+                MessageBox.Show(this, $"The directory 'Fonts' has more than one ttf font file with name ended with '{ORIGINAL_FONT_FILE_ENDS}'. Please left only one in it.", "Many orig fonts", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(0);
             }
             else if (originalFontFileCount == 0)
             {
-                MessageBox.Show($"The directory 'Fonts' hasn't any ttf font file with name ended with '{ORIGINAL_FONT_FILE_ENDS}'. Please copy ttf font file with name ended with '{ORIGINAL_FONT_FILE_ENDS}' in it.");
-                Application.Exit();
+                MessageBox.Show(this, $"The directory 'Fonts' hasn't any ttf font file with name ended with '{ORIGINAL_FONT_FILE_ENDS}'. Please copy ttf font file with name ended with '{ORIGINAL_FONT_FILE_ENDS}' in it.", "No orig fonts", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(0);
             }
 
             _originalFontLocation = fontsDirectoryFiles.First(f => f.EndsWith("_orig.ttf"));
