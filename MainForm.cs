@@ -57,7 +57,7 @@ namespace Font_Extender
                 File.Delete(_modifiedFontLocation);
                 File.Delete(_ttxLocation);
                 File.Copy(_originalFontLocation, _modifiedFontLocation);
-                _ttxManager.ExecuteTTXConversion(_modifiedFontLocation);
+                TTXUtils.ExecuteTTXConversion(_modifiedFontLocation);
                 File.Delete(_modifiedFontLocation);
                 _ttxManager.RemoveGlyphHistory();
 
@@ -68,7 +68,7 @@ namespace Font_Extender
                     _ttxManager.AddСombinedGlyph(new string[] { "uni043B", "space", "uni0434" });
                     _ttxManager.AddСombinedGlyph(new string[] { "space", "uni0432", "space" });
                     _ttxManager.SaveChanges();
-                    _ttxManager.ExecuteTTXConversion(_ttxLocation);
+                    TTXUtils.ExecuteTTXConversion(_ttxLocation);
                 }
             }
             if (_useTestFile)
@@ -97,7 +97,7 @@ namespace Font_Extender
 
                     analyzer.ReplaceWithSymbol(replacedCombination, (char)(currentSymbolCode));
                 }
-                _ttxManager.ExecuteTTXConversion(_ttxLocation);
+                TTXUtils.ExecuteTTXConversion(_ttxLocation);
                 analyzer.SaveChanges();
             }
 
@@ -125,18 +125,20 @@ namespace Font_Extender
             //Check ttx file exists
             if (!File.Exists(_ttxLocation))
             {
-                var dialogResult = MessageBox.Show(this, $"TTX file doesn't exist. Do you want to create ttx file?", "TTX file doesn't exist", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (dialogResult == DialogResult.Yes)
+                MessageBox.Show(this, $"TTX file not found. It will now be created with 'fonttools' util 'ttx'.", "TTX file doesn't exist", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                if (File.Exists(_modifiedFontLocation))
                 {
-                    File.Copy(_originalFontLocation, _modifiedFontLocation);
-                    _ttxManager.ExecuteTTXConversion(_modifiedFontLocation);
                     File.Delete(_modifiedFontLocation);
+                }
+                File.Copy(_originalFontLocation, _modifiedFontLocation);
+                TTXUtils.ExecuteTTXConversion(_modifiedFontLocation);
+                File.Delete(_modifiedFontLocation);
 
-                    if (!File.Exists(_ttxLocation))
-                    {
-                        MessageBox.Show($"TTX file couldn't create. Please install 'fonttools' and try again.");
-                        Application.Exit();
-                    }
+                if (!File.Exists(_ttxLocation))
+                {
+                    MessageBox.Show($"TTX file couldn't create. Please install 'fonttools' and try again.");
+                    Application.Exit();
                 }
             }
 
@@ -344,7 +346,7 @@ namespace Font_Extender
                 }
             }
 
-            _ttxManager.ExecuteTTXConversion(TTXPathTextBox.Text);
+            TTXUtils.ExecuteTTXConversion(TTXPathTextBox.Text);
             picTestFont.Refresh();
 
             StatusBar.Text = "Сonversion successfully complete!";
@@ -520,7 +522,7 @@ namespace Font_Extender
             }
 
             ttxManager.SaveChanges();
-            _ttxManager.ExecuteTTXConversion(TTXPathTextBox.Text);
+            TTXUtils.ExecuteTTXConversion(TTXPathTextBox.Text);
             analyzer.SaveChanges();
 
             StatusBar.Text = "Processing successfully completed!";
@@ -534,7 +536,7 @@ namespace Font_Extender
                 File.Delete(_modifiedFontLocation);
                 File.Delete(_ttxLocation);
                 File.Copy(_originalFontLocation, _modifiedFontLocation);
-                _ttxManager.ExecuteTTXConversion(_modifiedFontLocation);
+                TTXUtils.ExecuteTTXConversion(_modifiedFontLocation);
                 File.Delete(_modifiedFontLocation);
                 _ttxManager.RemoveGlyphHistory();
 

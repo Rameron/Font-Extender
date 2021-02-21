@@ -1,7 +1,6 @@
 ﻿using Font_Extender.Models;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -27,7 +26,7 @@ namespace Font_Extender
 
         public TTXManager(string ttxFilePath, int startUniIndex, int maxSymbolWidth)
         {
-            _glyphHistoryLocation = $@"{Environment.CurrentDirectory}\Fonts\AsteriskSansPro-SemiBoldItalic.history.txt";
+            _glyphHistoryLocation = ttxFilePath.Substring(0, ttxFilePath.Length - 4) + ".history.txt";
             LoadGlyphHistory();
 
             _ttxFilePath = ttxFilePath;
@@ -51,10 +50,10 @@ namespace Font_Extender
 
             //Find next free uni index for GlyphOrder node
             FindFreeUniIndex(glyfsNode);
-            
+
             //Parse info about combined glyph components from TTX(XML) file
             List<TTGlyph> combinedGlyphComponents = ParsePartGlyphs(glyfsNode, combinedGlyphComponentNames);
-            
+
             //Get hmtx node and mtx nodes of TTX(XML) file for calculating of total glyph width and writing to hmtx table
             XmlNode hmtxNode = xRoot.SelectSingleNode("hmtx");
             XmlNodeList mtxNodes = hmtxNode.SelectNodes("mtx");
@@ -250,7 +249,7 @@ namespace Font_Extender
             WriteGlyphInfoToGlyphOrderNode(xRoot, combinedGlyph);
             WriteGlyphInfoToHMTXNode(hmtxNode, combinedGlyph, totalGlyphWidth);
             WriteGlyphInfoToCMapNode(xRoot, combinedGlyph);
-            WriteGlyphInfoToGlyphNode(glyfsNode, combinedGlyph);                                   
+            WriteGlyphInfoToGlyphNode(glyfsNode, combinedGlyph);
             WriteGlyphInfoToPostNode(xRoot, combinedGlyph);
             WriteGlyphInfoToGDEFNode(xRoot, combinedGlyph);
         }
@@ -414,25 +413,8 @@ namespace Font_Extender
 
         #endregion
 
-        #region General TTX function
-
-        public void ExecuteTTXConversion(string targetPath)
-        {
-            var ttxConvertCommand = $"ttx {Path.GetFileName(targetPath)}";
-            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + ttxConvertCommand);
-            processInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-            processInfo.WorkingDirectory = Path.GetDirectoryName(targetPath);
-            var process = Process.Start(processInfo);
-
-            process.WaitForExit();
-
-            process.Close();
-        }
-
-        #endregion
-
         #region XML Utils
-        
+
         private void AddAttribute(XmlNode targetNode, string name, int value)
         {
             AddAttribute(targetNode, name, value.ToString());

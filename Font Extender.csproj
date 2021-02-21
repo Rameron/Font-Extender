@@ -65,6 +65,7 @@
     <Compile Include="Settings.cs" />
     <Compile Include="TextAnalyzer.cs" />
     <Compile Include="TTXManager.cs" />
+    <Compile Include="TTXUtils.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
