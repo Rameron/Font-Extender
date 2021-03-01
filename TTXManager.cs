@@ -11,7 +11,7 @@ namespace Font_Extender
     {
         private readonly XmlDocument ttxFontFile;
 
-        private string _ttxFilePath;
+        private string _ttxFileName;
         private int _startUniIndex;
         private int _maxSymbolWidth;
 
@@ -20,29 +20,34 @@ namespace Font_Extender
         private readonly string _glyphHistoryLocation;
         private Dictionary<string, string[]> _glyphHistoryDictionary;
 
-        public string TtxFilePath { get => _ttxFilePath; set => _ttxFilePath = value; }
+        public string TtxFileName { get => _ttxFileName; set => _ttxFileName = value; }
         public int StartUniIndex { get => _startUniIndex; set => _startUniIndex = value; }
         public int MaxSymbolWidth { get => _maxSymbolWidth; set => _maxSymbolWidth = value; }
+        public Dictionary<string, string[]> GlyphHistoryDictionary { get => _glyphHistoryDictionary; }
 
-        public TTXManager(string ttxFilePath, int startUniIndex, int maxSymbolWidth)
+        public TTXManager(string ttxFileName, int startUniIndex, int maxSymbolWidth)
         {
-            _glyphHistoryLocation = ttxFilePath.Substring(0, ttxFilePath.Length - 4) + ".history.txt";
+            _glyphHistoryLocation = TTXUtils.GetHistoryGlyphFileLocation(ttxFileName);
             LoadGlyphHistory();
 
-            _ttxFilePath = ttxFilePath;
+            _ttxFileName = ttxFileName;
             _startUniIndex = startUniIndex;
             _maxSymbolWidth = maxSymbolWidth;
 
             _currentUniIndex = _startUniIndex;
 
             ttxFontFile = new XmlDocument();
-            ttxFontFile.Load(_ttxFilePath);
+            ttxFontFile.Load(_ttxFileName);
         }
 
-        public int AddСombinedGlyph(string[] combinedGlyphComponentNames)
+        public (bool, string) AddСombinedGlyph(string[] combinedGlyphComponentNames)
         {
-            //Check if lglyph from same components exists
-            CheckGlyphHistory(combinedGlyphComponentNames);
+            //Check if glyph from same components exists
+            var glyphIndex = GetIndexOfAlreadyExistsGlyphInHistory(combinedGlyphComponentNames);
+            if (glyphIndex != string.Empty)
+            {
+                return (false, glyphIndex);
+            }
 
             //Get root node and glyf node of TTX(XML) file for glyphs parsing and writing
             XmlElement xRoot = ttxFontFile.DocumentElement;
@@ -67,6 +72,11 @@ namespace Font_Extender
             //Calculating of total width of combined glyph
             var totalGlyphWidth = CalculateTotalGlyphWidth(combinedGlyphComponents, combinedGlyphComponentsMtxGlyphInfo);
 
+            if (totalGlyphWidth == -1)
+            {
+                return (false, combinedGlyph.Name);
+            }
+
             //Write all necessary information in  TTX(XML) file
             WriteCombinedGlyphInfoToTTX(xRoot, glyfsNode, hmtxNode, combinedGlyph, totalGlyphWidth);
 
@@ -74,7 +84,7 @@ namespace Font_Extender
             SaveGlyphToHistory(combinedGlyph.Name, combinedGlyphComponentNames);
 
             //Return uni index of created glyph
-            return _currentUniIndex;
+            return (true, combinedGlyph.Name);
         }
 
         private void FindFreeUniIndex(XmlNode glyfsNode)
@@ -238,7 +248,7 @@ namespace Font_Extender
 
             if (totalGlyphWidth > _maxSymbolWidth)
             {
-                throw new Exception("Custom glyph width is too big!");
+                return -1;
             }
 
             return totalGlyphWidth;
@@ -358,22 +368,23 @@ namespace Font_Extender
         {
             if (replaceFile)
             {
-                ttxFontFile.Save(_ttxFilePath);
+                ttxFontFile.Save(_ttxFileName);
             }
             else
             {
-                ttxFontFile.Save(Path.Combine(Path.GetDirectoryName(_ttxFilePath), Path.GetFileNameWithoutExtension(_ttxFilePath) + "_modified.ttx"));
+                ttxFontFile.Save(Path.Combine(Path.GetDirectoryName(_ttxFileName), Path.GetFileNameWithoutExtension(_ttxFileName) + "_modified.ttx"));
             }
         }
 
         #region Glyph history methods
 
-        private void CheckGlyphHistory(string[] glyphArray)
+        public string GetIndexOfAlreadyExistsGlyphInHistory(string[] glyphArray)
         {
             if (_glyphHistoryDictionary.Any(x => x.Value.SequenceEqual(glyphArray)))
             {
-                throw new Exception("Glyph already was created!");
+                return _glyphHistoryDictionary.First(x => x.Value.SequenceEqual(glyphArray)).Key;
             }
+            return string.Empty;
         }
         private void LoadGlyphHistory()
         {
@@ -391,7 +402,7 @@ namespace Font_Extender
                 }
             }
         }
-        private void SaveGlyphToHistory(string glyphName, string[] glyphComponents)
+        public void SaveGlyphToHistory(string glyphName, string[] glyphComponents)
         {
             var saveString = $"{glyphName}:";
             foreach (var glyphComponent in glyphComponents)
@@ -405,10 +416,6 @@ namespace Font_Extender
 
 
             _glyphHistoryDictionary.Add(glyphName, glyphComponents);
-        }
-        public void RemoveGlyphHistory()
-        {
-            File.Delete(_glyphHistoryLocation);
         }
 
         #endregion

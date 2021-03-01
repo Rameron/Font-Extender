@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Font_Extender
@@ -23,11 +24,7 @@ namespace Font_Extender
         #region Private Fields
 
         private Dictionary<string, string> _symbolsDictionary;
-        private TTXManager _ttxManager;
-
-        private const bool _clearFontChanges = false;
-        private const bool _useTestSymbolsSet = false;
-        private const bool _useTestFile = false;
+        //private TTXManager _ttxManager;
 
         private string _originalFontLocation;
         private string _modifiedFontLocation;
@@ -50,56 +47,7 @@ namespace Font_Extender
             _defaultMaxCustomWidthCount = Properties.Settings.Default.MaxCustomWidthCount;
 
             LoadSymbols();
-            InitTTXManager();
-
-            if (_clearFontChanges)
-            {
-                File.Delete(_modifiedFontLocation);
-                File.Delete(_ttxLocation);
-                File.Copy(_originalFontLocation, _modifiedFontLocation);
-                TTXUtils.ExecuteTTXConversion(_modifiedFontLocation);
-                File.Delete(_modifiedFontLocation);
-                _ttxManager.RemoveGlyphHistory();
-
-                if (_useTestSymbolsSet)
-                {
-                    _ttxManager.AddСombinedGlyph(new string[] { "uni0432", "uni0446", "uni0435" });
-                    _ttxManager.AddСombinedGlyph(new string[] { "space", "uni0436", "uni0435" });
-                    _ttxManager.AddСombinedGlyph(new string[] { "uni043B", "space", "uni0434" });
-                    _ttxManager.AddСombinedGlyph(new string[] { "space", "uni0432", "space" });
-                    _ttxManager.SaveChanges();
-                    TTXUtils.ExecuteTTXConversion(_ttxLocation);
-                }
-            }
-            if (_useTestFile)
-            {
-                var analyzer = new TextAnalyzer(@"C:\Users\Ramer\Desktop\Original.txt", Encoding.UTF8, true);
-                for (int customSymbolIndex = 0; customSymbolIndex < 50; customSymbolIndex++)
-                {
-                    analyzer.Analyze();
-                    var replacedCombination = analyzer.CombinationHistogram.First().Key;
-
-                    var combinedSymbols = new List<string>();
-                    foreach (var sChar in replacedCombination)
-                    {
-                        if (sChar.ToString() != " ")
-                        {
-                            combinedSymbols.Add(_symbolsDictionary[sChar.ToString()]);
-                        }
-                        else
-                        {
-                            combinedSymbols.Add("space");
-                        }
-                    }
-
-                    var currentSymbolCode = _ttxManager.AddСombinedGlyph(combinedSymbols.ToArray());
-                    _ttxManager.SaveChanges();
-
-                    analyzer.ReplaceWithSymbol(replacedCombination, (char)(currentSymbolCode));
-                }
-                TTXUtils.ExecuteTTXConversion(_ttxLocation);
-                analyzer.SaveChanges();
-            }
+            CheckOrCreateTTXFile();
 
             InitializeComponent();
         }
@@ -120,13 +68,13 @@ namespace Font_Extender
             }
         }
 
-        private void InitTTXManager()
+        private void CheckOrCreateTTXFile()
         {
             //Check ttx file exists
             if (!File.Exists(_ttxLocation))
             {
                 MessageBox.Show(this, $"TTX file not found. It will now be created with 'fonttools' util 'ttx'.", "TTX file doesn't exist", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                
+
                 if (File.Exists(_modifiedFontLocation))
                 {
                     File.Delete(_modifiedFontLocation);
@@ -141,11 +89,6 @@ namespace Font_Extender
                     Environment.Exit(0);
                 }
             }
-
-            _ttxManager = new TTXManager(
-                _ttxLocation,
-                int.Parse(_defaultStartUniIndex, System.Globalization.NumberStyles.HexNumber),
-                _defaultMaxCustomWidthCount);
         }
 
         private void LoadWorkingPaths()
@@ -304,7 +247,15 @@ namespace Font_Extender
 
             try
             {
-                ttxManager.AddСombinedGlyph(symbolCodes.ToArray()).ToString("X");
+                bool glyphCreated;
+                string glyphUniIndex;
+                (glyphCreated, glyphUniIndex) = ttxManager.AddСombinedGlyph(symbolCodes.ToArray());
+
+                if (!glyphCreated)
+                {
+                    StatusBar.Text = $"Conversion failed: Glyph already exists.";
+                    return;
+                }
                 ttxManager.SaveChanges();
 
                 foreach (var item in PlannedGlyphSymbolsList.Items)
@@ -442,7 +393,7 @@ namespace Font_Extender
             }
         }
 
-        private void GoButton_Click(object sender, EventArgs e)
+        private async void GoButton_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(StartUniIndexTextBox.Text))
             {
@@ -484,46 +435,22 @@ namespace Font_Extender
             }
 
             StatusBar.Text = "Processing, please wait...";
+
+            StatusProgressBar.Value = 0;
+            StatusProgressBar.Minimum = 0;
+            StatusProgressBar.Maximum = combinationCount;
+
             Application.DoEvents();
 
-            var ttxManager = new TTXManager(
-                    TTXPathTextBox.Text,
-                    startUniIndex,
-                    maxGlyphWidth
-                    );
-
-            var analyzer = new TextAnalyzer(TextFilesList.Items.Cast<string>().ToArray(), Encoding.UTF8, SmallLetterCheckBox.Checked);
-            for (int customSymbolIndex = 0; customSymbolIndex < combinationCount; customSymbolIndex++)
-            {
-                analyzer.Analyze();
-
-                if (analyzer.CombinationHistogram.Count == 0)
-                {
-                    break;
-                }
-
-                var replacedCombination = analyzer.CombinationHistogram.First().Key;
-
-                var combinedSymbols = new List<string>();
-                foreach (var sChar in replacedCombination)
-                {
-                    if (sChar.ToString() != " ")
-                    {
-                        combinedSymbols.Add(_symbolsDictionary[sChar.ToString()]);
-                    }
-                    else
-                    {
-                        combinedSymbols.Add("space");
-                    }
-                }
-
-                var currentSymbolCode = ttxManager.AddСombinedGlyph(combinedSymbols.ToArray());
-                analyzer.ReplaceWithSymbol(replacedCombination, (char)(currentSymbolCode));
-            }
-
-            ttxManager.SaveChanges();
-            TTXUtils.ExecuteTTXConversion(TTXPathTextBox.Text);
-            analyzer.SaveChanges();
+            LockFormControls(true);
+            await ExecuteFontCreation(
+                TTXPathTextBox.Text,
+                startUniIndex,
+                maxGlyphWidth,
+                combinationCount,
+                TextFilesList.Items.Cast<string>().ToArray(),
+                SmallLetterCheckBox.Checked);
+            LockFormControls(false);
 
             StatusBar.Text = "Processing successfully completed!";
         }
@@ -538,7 +465,7 @@ namespace Font_Extender
                 File.Copy(_originalFontLocation, _modifiedFontLocation);
                 TTXUtils.ExecuteTTXConversion(_modifiedFontLocation);
                 File.Delete(_modifiedFontLocation);
-                _ttxManager.RemoveGlyphHistory();
+                File.Delete(TTXUtils.GetHistoryGlyphFileLocation(_ttxLocation));
 
                 picTestFont.Refresh();
             }
@@ -554,5 +481,126 @@ namespace Font_Extender
         }
 
         #endregion
+
+        private void LockFormControls(bool lockState)
+        {
+            foreach (var control in Controls)
+            {
+                (control as Control).Enabled = !lockState;
+            }
+        }
+
+        private async Task ExecuteFontCreation(
+            string ttxPath,
+            int startUniIndex,
+            int maxGlyphWidth,
+            int combinationCount,
+            string[] textFiles,
+            bool onlySmallLetters)
+        {
+            await Task.Run(() =>
+            {
+                var ttxManager = new TTXManager(
+                ttxPath,
+                startUniIndex,
+                maxGlyphWidth
+                );
+
+                var allCombinationProcessed = false;
+                var excludedCombinations = new List<string>();
+
+                var analyzer = new TextAnalyzer(textFiles, Encoding.UTF8, onlySmallLetters);
+                for (int customSymbolIndex = 0; customSymbolIndex < combinationCount; customSymbolIndex++)
+                {
+                    var historyCombinations = new List<string>();
+                    foreach (var dictPair in ttxManager.GlyphHistoryDictionary)
+                    {
+                        var historyCombination = string.Empty;
+                        for (int dictPairValueIndex = 0; dictPairValueIndex < dictPair.Value.Length; dictPairValueIndex++)
+                        {
+                            if (dictPair.Value[dictPairValueIndex] == "space")
+                            {
+                                historyCombination += " ";
+                            }
+                            else
+                            {
+                                historyCombination += _symbolsDictionary.First(x => x.Value == dictPair.Value[dictPairValueIndex]).Key;
+                            }
+                        }
+                        if (!string.IsNullOrEmpty(historyCombination))
+                        {
+                            historyCombinations.Add(historyCombination);
+                        }
+                    }
+
+                    historyCombinations.AddRange(excludedCombinations);
+                    analyzer.Analyze(historyCombinations.ToArray());
+
+                    if (analyzer.CombinationHistogram.Count == 0)
+                    {
+                        break;
+                    }
+
+                    var combinationProcessed = false;
+                    var combinationHistogramIndex = 0;
+                    do
+                    {
+                        var replacedCombination = analyzer.CombinationHistogram.ElementAt(combinationHistogramIndex).Key;
+
+                        var combinedSymbols = new List<string>();
+                        foreach (var sChar in replacedCombination)
+                        {
+                            if (sChar.ToString() != " ")
+                            {
+                                combinedSymbols.Add(_symbolsDictionary[sChar.ToString()]);
+                            }
+                            else
+                            {
+                                combinedSymbols.Add("space");
+                            }
+                        }
+
+                        bool glyphCreated;
+                        string glyphUniIndex;
+                        (glyphCreated, glyphUniIndex) = ttxManager.AddСombinedGlyph(combinedSymbols.ToArray());
+                        if (glyphCreated)
+                        {
+                            analyzer.ReplaceWithSymbol(replacedCombination, (char)(int.Parse(glyphUniIndex.Substring(3), System.Globalization.NumberStyles.HexNumber)));
+                            combinationProcessed = true;
+                        }
+                        else
+                        {
+                            if (combinationHistogramIndex == analyzer.CombinationHistogram.Count - 1)
+                            {
+                                allCombinationProcessed = true;
+                                break;
+                            }
+
+                            combinationHistogramIndex++;
+                            excludedCombinations.Add(replacedCombination);
+                        }
+                    } while (!combinationProcessed);
+                    if (allCombinationProcessed)
+                    {
+                        break;
+                    }
+
+                    StatusStrip.Invoke((MethodInvoker)delegate { StatusProgressBar.Value = customSymbolIndex + 1; });
+                }
+
+                ttxManager.SaveChanges();
+
+                var ttfFilePath = Path.Combine(Path.GetDirectoryName(ttxPath), Path.GetFileNameWithoutExtension(ttxPath) + ".ttf");
+                if (File.Exists(ttfFilePath))
+                {
+                    File.Delete(ttfFilePath);
+                }
+
+                TTXUtils.ExecuteTTXConversion(ttxPath);
+                analyzer.SaveChanges();
+
+                StatusStrip.Invoke((MethodInvoker)delegate { StatusProgressBar.Value = StatusProgressBar.Maximum; });
+            });
+        }
     }
 }

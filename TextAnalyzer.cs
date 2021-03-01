@@ -38,7 +38,7 @@ namespace Font_Extender
             }
         }
 
-        public void Analyze()
+        public void Analyze(string[] excludedCombination)
         {
             CombinationHistogram = new Dictionary<string, int>();
 
@@ -51,6 +51,11 @@ namespace Font_Extender
                         var searchCombination = cyrillicLettersPlusSpace[firstLetterIndex].ToString() +
                                                 cyrillicLettersPlusSpace[secondLetterIndex].ToString() +
                                                 cyrillicLettersPlusSpace[thirdLetterIndex].ToString();
+
+                        if (excludedCombination.Contains(searchCombination))
+                        {
+                            continue;
+                        }
 
                         var countOfCombination = 0;
                         for (int textIndex = 0; textIndex < _filesText.Length; textIndex++)
@@ -79,6 +84,11 @@ namespace Font_Extender
                         countOfCombination += Regex.Matches(_filesText[textIndex], searchCombination).Count;
                     }
 
+                    if (excludedCombination.Contains(searchCombination))
+                    {
+                        continue;
+                    }
+
                     if (countOfCombination != 0)
                     {
                         CombinationHistogram.Add(searchCombination, countOfCombination);
@@ -102,11 +112,18 @@ namespace Font_Extender
             }
         }
 
-        public void SaveChanges()
+        public void SaveChanges(bool overrideFile = true)
         {
             for (int textIndex = 0; textIndex < _filesText.Length; textIndex++)
             {
-                File.WriteAllText(Path.Combine(Path.GetDirectoryName(_filePaths[textIndex]), Path.GetFileNameWithoutExtension(_filePaths[textIndex]) + "_modified" + Path.GetExtension(_filePaths[textIndex])), _filesText[textIndex], _fileEncoding);
+                if (overrideFile)
+                {
+                    File.WriteAllText(_filePaths[textIndex], _filesText[textIndex], _fileEncoding);
+                }
+                else
+                {
+                    File.WriteAllText(Path.Combine(Path.GetDirectoryName(_filePaths[textIndex]), Path.GetFileNameWithoutExtension(_filePaths[textIndex]) + "_modified" + Path.GetExtension(_filePaths[textIndex])), _filesText[textIndex], _fileEncoding);
+                }
             }
         }
     }

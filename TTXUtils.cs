@@ -17,5 +17,10 @@ namespace Font_Extender
 
             process.Close();
         }
+
+        public static string GetHistoryGlyphFileLocation(string ttxFileName)
+        {
+            return ttxFileName.Substring(0, ttxFileName.Length - 4) + ".history.txt";
+        }
     }
 }

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.AddLetter = new System.Windows.Forms.Button();
             this.PlannedGlyphSymbolsList = new System.Windows.Forms.ListBox();
             this.PlannedListClearButton = new System.Windows.Forms.Button();
@@ -38,7 +39,7 @@
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.label1 = new System.Windows.Forms.Label();
             this.StartUniIndexTextBox = new System.Windows.Forms.TextBox();
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.StatusStrip = new System.Windows.Forms.StatusStrip();
             this.StatusBar = new System.Windows.Forms.ToolStripStatusLabel();
             this.ConvertTTXtoTTF = new System.Windows.Forms.Button();
             this.RemoveLetter = new System.Windows.Forms.Button();
@@ -62,8 +63,9 @@
             this.SymbolsList = new System.Windows.Forms.ListBox();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.StatusProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.groupBox1.SuspendLayout();
-            this.statusStrip1.SuspendLayout();
+            this.StatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picTestFont)).BeginInit();
             this.groupBox2.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -149,37 +151,37 @@
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(14, 183);
+            this.label1.Location = new System.Drawing.Point(14, 180);
             this.label1.Margin = new System.Windows.Forms.Padding(0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(80, 13);
+            this.label1.Size = new System.Drawing.Size(168, 20);
             this.label1.TabIndex = 6;
             this.label1.Text = "Start Uni Index:";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // StartUniIndexTextBox
             // 
-            this.StartUniIndexTextBox.Location = new System.Drawing.Point(160, 180);
+            this.StartUniIndexTextBox.Location = new System.Drawing.Point(188, 180);
             this.StartUniIndexTextBox.Name = "StartUniIndexTextBox";
             this.StartUniIndexTextBox.Size = new System.Drawing.Size(35, 20);
             this.StartUniIndexTextBox.TabIndex = 7;
             // 
-            // statusStrip1
+            // StatusStrip
             // 
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.StatusBar});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 565);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(905, 22);
-            this.statusStrip1.TabIndex = 10;
-            this.statusStrip1.Text = "statusStrip1";
+            this.StatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.StatusBar,
+            this.StatusProgressBar});
+            this.StatusStrip.Location = new System.Drawing.Point(0, 565);
+            this.StatusStrip.Name = "StatusStrip";
+            this.StatusStrip.Size = new System.Drawing.Size(905, 22);
+            this.StatusStrip.TabIndex = 10;
+            this.StatusStrip.Text = "statusStrip1";
             // 
             // StatusBar
             // 
             this.StatusBar.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.StatusBar.Name = "StatusBar";
-            this.StatusBar.Size = new System.Drawing.Size(890, 17);
+            this.StatusBar.Size = new System.Drawing.Size(788, 17);
             this.StatusBar.Spring = true;
             this.StatusBar.Text = "Ready to work!";
             // 
@@ -310,32 +312,32 @@
             // 
             // MaxCustomWidthTextBox
             // 
-            this.MaxCustomWidthTextBox.Location = new System.Drawing.Point(160, 154);
+            this.MaxCustomWidthTextBox.Location = new System.Drawing.Point(188, 154);
             this.MaxCustomWidthTextBox.Name = "MaxCustomWidthTextBox";
             this.MaxCustomWidthTextBox.Size = new System.Drawing.Size(35, 20);
             this.MaxCustomWidthTextBox.TabIndex = 4;
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(14, 157);
+            this.label4.Location = new System.Drawing.Point(14, 154);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(130, 13);
+            this.label4.Size = new System.Drawing.Size(168, 20);
             this.label4.TabIndex = 3;
             this.label4.Text = "Custom symbol max width:";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(14, 130);
+            this.label3.Location = new System.Drawing.Point(14, 128);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(140, 13);
+            this.label3.Size = new System.Drawing.Size(168, 20);
             this.label3.TabIndex = 2;
             this.label3.Text = "Replace combination count:";
+            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // ReplaceCombinationCountTextBox
             // 
-            this.ReplaceCombinationCountTextBox.Location = new System.Drawing.Point(160, 128);
+            this.ReplaceCombinationCountTextBox.Location = new System.Drawing.Point(188, 128);
             this.ReplaceCombinationCountTextBox.Name = "ReplaceCombinationCountTextBox";
             this.ReplaceCombinationCountTextBox.Size = new System.Drawing.Size(35, 20);
             this.ReplaceCombinationCountTextBox.TabIndex = 1;
@@ -428,6 +430,11 @@
             this.label7.TabIndex = 22;
             this.label7.Text = "Custom Symbol Components";
             // 
+            // StatusProgressBar
+            // 
+            this.StatusProgressBar.Name = "StatusProgressBar";
+            this.StatusProgressBar.Size = new System.Drawing.Size(100, 16);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -441,20 +448,21 @@
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.RemoveLetter);
             this.Controls.Add(this.ConvertTTXtoTTF);
-            this.Controls.Add(this.statusStrip1);
+            this.Controls.Add(this.StatusStrip);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.ProcessButton);
             this.Controls.Add(this.PlannedListClearButton);
             this.Controls.Add(this.PlannedGlyphSymbolsList);
             this.Controls.Add(this.AddLetter);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
             this.Text = "Font Extender";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            this.statusStrip1.ResumeLayout(false);
-            this.statusStrip1.PerformLayout();
+            this.StatusStrip.ResumeLayout(false);
+            this.StatusStrip.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picTestFont)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
@@ -477,7 +485,7 @@
         private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox StartUniIndexTextBox;
-        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.StatusStrip StatusStrip;
         private System.Windows.Forms.ToolStripStatusLabel StatusBar;
         private System.Windows.Forms.Button ConvertTTXtoTTF;
         private System.Windows.Forms.Button RemoveLetter;
@@ -501,6 +509,7 @@
         private System.Windows.Forms.ListBox SymbolsList;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.ToolStripProgressBar StatusProgressBar;
     }
 }
 
