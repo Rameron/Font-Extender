@@ -87,6 +87,21 @@ namespace Font_Extender
             return (true, combinedGlyph.Name);
         }
 
+        public Dictionary<string, int> GetSymbolsWidth(Dictionary<string, string> symbolsDictionary)
+        {
+            Dictionary<string, int> symbolWidths = new Dictionary<string, int>();
+
+            XmlElement xRoot = ttxFontFile.DocumentElement;
+
+            XmlNode hmtxNode = xRoot.SelectSingleNode("hmtx");
+            XmlNodeList mtxNodes = hmtxNode.SelectNodes("mtx");
+
+            List<MtxGlyphInfo> symbolsMtxGlyphInfo = ParseGlyphWidths(symbolsDictionary.Select(x => new TTGlyph { Name = x.Value }).ToList(), mtxNodes);
+            symbolsMtxGlyphInfo.ForEach(x => symbolWidths.Add(x.Name, x.Width));
+
+            return symbolWidths;
+        }
+
         private void FindFreeUniIndex(XmlNode glyfsNode)
         {
             XmlNode creationGlyphNode;
@@ -167,13 +182,32 @@ namespace Font_Extender
         private List<MtxGlyphInfo> ParseGlyphWidths(List<TTGlyph> combinedGlyphComponents, XmlNodeList mtxNodes)
         {
             List<MtxGlyphInfo> glyphWidths = new List<MtxGlyphInfo>();
+            List<XmlNode> mtxNodesList = mtxNodes.Cast<XmlNode>().ToList();
             for (int glyphIndex = 0; glyphIndex < combinedGlyphComponents.Count; glyphIndex++)
             {
+                XmlNode targetNode = mtxNodesList.FirstOrDefault(node => node.Attributes["name"].Value == combinedGlyphComponents[glyphIndex].Name);
+                if (targetNode == null)
+                {
+                    //Space fix
+                    if (combinedGlyphComponents[glyphIndex].Name == "uni0020")
+                    {
+                        targetNode = mtxNodesList.FirstOrDefault(node => node.Attributes["name"].Value == "space");
+                        if (targetNode == null)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
                 glyphWidths.Add(new MtxGlyphInfo
                 {
                     Name = combinedGlyphComponents[glyphIndex].Name,
-                    Width = int.Parse(mtxNodes.Cast<XmlNode>().First(node => node.Attributes["name"].Value == combinedGlyphComponents[glyphIndex].Name).Attributes["width"].Value),
-                    LSB = int.Parse(mtxNodes.Cast<XmlNode>().First(node => node.Attributes["name"].Value == combinedGlyphComponents[glyphIndex].Name).Attributes["lsb"].Value),
+                    Width = int.Parse(targetNode.Attributes["width"].Value),
+                    LSB = int.Parse(targetNode.Attributes["lsb"].Value),
                 });
             }
 

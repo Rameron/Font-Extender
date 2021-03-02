@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.IO;
 using System.Linq;
+using System.Media;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -24,7 +25,6 @@ namespace Font_Extender
         #region Private Fields
 
         private Dictionary<string, string> _symbolsDictionary;
-        //private TTXManager _ttxManager;
 
         private string _originalFontLocation;
         private string _modifiedFontLocation;
@@ -33,6 +33,7 @@ namespace Font_Extender
         private string _defaultStartUniIndex;
         private int _defaultReplaceCombinationCount;
         private int _defaultMaxCustomWidthCount;
+        private int _defaultWidthRatio;
 
         #endregion
 
@@ -45,6 +46,7 @@ namespace Font_Extender
             _defaultStartUniIndex = Properties.Settings.Default.StartUniIndex;
             _defaultReplaceCombinationCount = Properties.Settings.Default.ReplaceCombinationCount;
             _defaultMaxCustomWidthCount = Properties.Settings.Default.MaxCustomWidthCount;
+            _defaultWidthRatio = Properties.Settings.Default.WidthRatio;
 
             LoadSymbols();
             CheckOrCreateTTXFile();
@@ -138,6 +140,8 @@ namespace Font_Extender
             StartUniIndexTextBox.Text = _defaultStartUniIndex;
             ReplaceCombinationCountTextBox.Text = _defaultReplaceCombinationCount.ToString();
             MaxCustomWidthTextBox.Text = _defaultMaxCustomWidthCount.ToString();
+            tbWidthRatio.Value = _defaultWidthRatio;
+            lblWidthRatio.Text = (_defaultWidthRatio * 5 / 100.0).ToString();
 
             //Fill first phrase textbox with custom symbols values
             for (var i = 0; i < 30; i++)
@@ -273,10 +277,12 @@ namespace Font_Extender
                 }
                 PlannedListClearButton.PerformClick();
 
+                SystemSounds.Beep.Play();
                 StatusBar.Text = "Glyph creation successfully completed!";
             }
             catch (Exception exception)
             {
+                SystemSounds.Hand.Play();
                 StatusBar.Text = $"Conversion failed: {exception.Message}";
 
                 File.AppendAllText("Errors.log", $"{DateTime.Now}: Error message - {exception.Message}{Environment.NewLine}{exception.StackTrace}{Environment.NewLine}{Environment.NewLine}");
@@ -434,6 +440,16 @@ namespace Font_Extender
                 return;
             }
 
+            var dialogResult = MessageBox.Show(this, $"Do you want to restore original font before processing? It's highly recommended for the correct work.", "Font Restoring", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+            if (dialogResult == DialogResult.Yes)
+            {
+                RestoreOriginalFont();
+            }
+            else if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
             StatusBar.Text = "Processing, please wait...";
 
             StatusProgressBar.Value = 0;
@@ -449,9 +465,12 @@ namespace Font_Extender
                 maxGlyphWidth,
                 combinationCount,
                 TextFilesList.Items.Cast<string>().ToArray(),
-                SmallLetterCheckBox.Checked);
+                SmallLetterCheckBox.Checked,
+                Math.Round((100.0 - (tbWidthRatio.Value * 5)) / 100.0, 2),
+                Math.Round(tbWidthRatio.Value * 5 / 100.0, 2));
             LockFormControls(false);
 
+            SystemSounds.Beep.Play();
             StatusBar.Text = "Processing successfully completed!";
         }
 
@@ -460,14 +479,7 @@ namespace Font_Extender
             var dialogResult = MessageBox.Show(this, $"Do you really want to restore original font?", "Font Restoring", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (dialogResult == DialogResult.Yes)
             {
-                File.Delete(_modifiedFontLocation);
-                File.Delete(_ttxLocation);
-                File.Copy(_originalFontLocation, _modifiedFontLocation);
-                TTXUtils.ExecuteTTXConversion(_modifiedFontLocation);
-                File.Delete(_modifiedFontLocation);
-                File.Delete(TTXUtils.GetHistoryGlyphFileLocation(_ttxLocation));
-
-                picTestFont.Refresh();
+                RestoreOriginalFont();
             }
         }
 
@@ -476,8 +488,14 @@ namespace Font_Extender
             Properties.Settings.Default.StartUniIndex = StartUniIndexTextBox.Text;
             Properties.Settings.Default.ReplaceCombinationCount = int.Parse(ReplaceCombinationCountTextBox.Text);
             Properties.Settings.Default.MaxCustomWidthCount = int.Parse(MaxCustomWidthTextBox.Text);
+            Properties.Settings.Default.WidthRatio = tbWidthRatio.Value;
 
             Properties.Settings.Default.Save();
+        }
+
+        private void tbWidthRatio_Scroll(object sender, EventArgs e)
+        {
+            lblWidthRatio.Text = (tbWidthRatio.Value * 5 / 100.0).ToString();
         }
 
         #endregion
@@ -496,7 +514,9 @@ namespace Font_Extender
             int maxGlyphWidth,
             int combinationCount,
             string[] textFiles,
-            bool onlySmallLetters)
+            bool onlySmallLetters,
+            double frequencyRatio,
+            double totalWidthRatio)
         {
             await Task.Run(() =>
             {
@@ -509,7 +529,21 @@ namespace Font_Extender
                 var allCombinationProcessed = false;
                 var excludedCombinations = new List<string>();
 
-                var analyzer = new TextAnalyzer(textFiles, Encoding.UTF8, onlySmallLetters);
+                var symbolWidthsByUniIndexes = ttxManager.GetSymbolsWidth(_symbolsDictionary);
+
+                var symbolWidthsBySymbols = new Dictionary<string, int>();
+                foreach (var uniWidthPair in symbolWidthsByUniIndexes)
+                {
+                    var pairKey = _symbolsDictionary.First(x => x.Value == uniWidthPair.Key).Key;
+                    if (pairKey == "<пробел>")
+                    {
+                        pairKey = " ";
+                    }
+
+                    symbolWidthsBySymbols.Add(pairKey, uniWidthPair.Value);
+                }
+
+                var analyzer = new TextAnalyzer(textFiles, Encoding.UTF8, onlySmallLetters, frequencyRatio, totalWidthRatio);
                 for (int customSymbolIndex = 0; customSymbolIndex < combinationCount; customSymbolIndex++)
                 {
                     var historyCombinations = new List<string>();
@@ -534,9 +568,9 @@ namespace Font_Extender
                     }
 
                     historyCombinations.AddRange(excludedCombinations);
-                    analyzer.Analyze(historyCombinations.ToArray());
+                    analyzer.Analyze(historyCombinations.ToArray(), symbolWidthsBySymbols, maxGlyphWidth);
 
-                    if (analyzer.CombinationHistogram.Count == 0)
+                    if (analyzer.CombinationInfos.Count == 0)
                     {
                         break;
                     }
@@ -545,7 +579,7 @@ namespace Font_Extender
                     var combinationHistogramIndex = 0;
                     do
                     {
-                        var replacedCombination = analyzer.CombinationHistogram.ElementAt(combinationHistogramIndex).Key;
+                        var replacedCombination = analyzer.CombinationInfos.ElementAt(combinationHistogramIndex).Value;
 
                         var combinedSymbols = new List<string>();
                         foreach (var sChar in replacedCombination)
@@ -570,7 +604,7 @@ namespace Font_Extender
                         }
                         else
                         {
-                            if (combinationHistogramIndex == analyzer.CombinationHistogram.Count - 1)
+                            if (combinationHistogramIndex == analyzer.CombinationInfos.Count - 1)
                             {
                                 allCombinationProcessed = true;
                                 break;
@@ -601,6 +635,18 @@ namespace Font_Extender
 
                 StatusStrip.Invoke((MethodInvoker)delegate { StatusProgressBar.Value = StatusProgressBar.Maximum; });
             });
+        }
+
+        private void RestoreOriginalFont()
+        {
+            File.Delete(_modifiedFontLocation);
+            File.Delete(_ttxLocation);
+            File.Copy(_originalFontLocation, _modifiedFontLocation);
+            TTXUtils.ExecuteTTXConversion(_modifiedFontLocation);
+            File.Delete(_modifiedFontLocation);
+            File.Delete(TTXUtils.GetHistoryGlyphFileLocation(_ttxLocation));
+
+            picTestFont.Refresh();
         }
     }
 }

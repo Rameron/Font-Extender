@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Font_Extender.Models;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,22 +9,27 @@ namespace Font_Extender
 {
     public class TextAnalyzer
     {
-        public Dictionary<string, int> CombinationHistogram { get; set; }
+        public List<CombinationInfo> CombinationInfos { get; set; }
 
         private readonly string cyrillicLettersPlusSpace = "абгдеёжзийклмнопрстуфхцчшщъыьэюя ";
 
         private readonly string[] _filePaths;
         private readonly Encoding _fileEncoding;
-        private readonly bool _onlySmallLetters;
+
+        private readonly double _frequencyRatio;
+        private readonly double _totalWidthRatio;
 
         private string[] _filesText;
 
-        public TextAnalyzer(string filePath, Encoding fileEncoding, bool onlySmallLetters) : this(new string[] { filePath }, fileEncoding, onlySmallLetters) { }
-        public TextAnalyzer(string[] filePaths, Encoding fileEncoding, bool onlySmallLetters)
+        public TextAnalyzer(string filePath, Encoding fileEncoding, bool onlySmallLetters, double frequencyRatio, double totalWidthRatio)
+            : this(new string[] { filePath }, fileEncoding, onlySmallLetters, frequencyRatio, totalWidthRatio) { }
+        public TextAnalyzer(string[] filePaths, Encoding fileEncoding, bool onlySmallLetters, double frequencyRatio, double totalWidthRatio)
         {
             _filePaths = filePaths;
             _fileEncoding = fileEncoding;
-            _onlySmallLetters = onlySmallLetters;
+
+            _frequencyRatio = frequencyRatio;
+            _totalWidthRatio = totalWidthRatio;
 
             _filesText = new string[_filePaths.Length];
             for (int fileIndex = 0; fileIndex < _filePaths.Length; fileIndex++)
@@ -38,9 +44,9 @@ namespace Font_Extender
             }
         }
 
-        public void Analyze(string[] excludedCombination)
+        public void Analyze(string[] excludedCombination, Dictionary<string, int> symbolWidths, int maxWidth)
         {
-            CombinationHistogram = new Dictionary<string, int>();
+            CombinationInfos = new List<CombinationInfo>();
 
             for (int firstLetterIndex = 0; firstLetterIndex < cyrillicLettersPlusSpace.Length; firstLetterIndex++)
             {
@@ -65,7 +71,23 @@ namespace Font_Extender
 
                         if (countOfCombination != 0)
                         {
-                            CombinationHistogram.Add(searchCombination, countOfCombination);
+                            var combinationWidth = 0;
+                            foreach (var cSymbol in searchCombination)
+                            {
+                                combinationWidth += symbolWidths[cSymbol.ToString()];
+                            }
+
+                            if (combinationWidth > maxWidth)
+                            {
+                                continue;
+                            }
+
+                            CombinationInfos.Add(new CombinationInfo
+                            {
+                                Value = searchCombination,
+                                Frequency = countOfCombination,
+                                TotalWidth = combinationWidth
+                            });
                         }
                     }
                 }
@@ -91,12 +113,35 @@ namespace Font_Extender
 
                     if (countOfCombination != 0)
                     {
-                        CombinationHistogram.Add(searchCombination, countOfCombination);
+                        var combinationWidth = 0;
+                        foreach (var cSymbol in searchCombination)
+                        {
+                            combinationWidth += symbolWidths[cSymbol.ToString()];
+                        }
+
+                        if (combinationWidth > maxWidth)
+                        {
+                            continue;
+                        }
+
+                        CombinationInfos.Add(new CombinationInfo
+                        {
+                            Value = searchCombination,
+                            Frequency = countOfCombination,
+                            TotalWidth = combinationWidth
+                        });
                     }
                 }
             }
 
-            CombinationHistogram = CombinationHistogram.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+            if (CombinationInfos.Count > 0)
+            {
+                var maxFrequency = CombinationInfos.Max(x => x.Frequency);
+                var maxTotalWidth = CombinationInfos.Max(x => x.TotalWidth);
+
+                CombinationInfos = CombinationInfos.OrderByDescending(
+                    x => (100.0 * x.Frequency / maxFrequency * _frequencyRatio) + (100.0 * x.TotalWidth / maxTotalWidth * _totalWidthRatio)).ToList();
+            }
         }
 
         private string OpenFile(string filePath, Encoding fileEncoding)

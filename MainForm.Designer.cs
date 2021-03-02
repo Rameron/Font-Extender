@@ -41,6 +41,7 @@
             this.StartUniIndexTextBox = new System.Windows.Forms.TextBox();
             this.StatusStrip = new System.Windows.Forms.StatusStrip();
             this.StatusBar = new System.Windows.Forms.ToolStripStatusLabel();
+            this.StatusProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.ConvertTTXtoTTF = new System.Windows.Forms.Button();
             this.RemoveLetter = new System.Windows.Forms.Button();
             this.picTestFont = new System.Windows.Forms.PictureBox();
@@ -63,13 +64,16 @@
             this.SymbolsList = new System.Windows.Forms.ListBox();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
-            this.StatusProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.label8 = new System.Windows.Forms.Label();
+            this.tbWidthRatio = new System.Windows.Forms.TrackBar();
+            this.lblWidthRatio = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.StatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picTestFont)).BeginInit();
             this.groupBox2.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tbWidthRatio)).BeginInit();
             this.SuspendLayout();
             // 
             // AddLetter
@@ -185,6 +189,11 @@
             this.StatusBar.Spring = true;
             this.StatusBar.Text = "Ready to work!";
             // 
+            // StatusProgressBar
+            // 
+            this.StatusProgressBar.Name = "StatusProgressBar";
+            this.StatusProgressBar.Size = new System.Drawing.Size(100, 16);
+            // 
             // ConvertTTXtoTTF
             // 
             this.ConvertTTXtoTTF.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -215,7 +224,7 @@
             this.picTestFont.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.picTestFont.Location = new System.Drawing.Point(13, 101);
             this.picTestFont.Name = "picTestFont";
-            this.picTestFont.Size = new System.Drawing.Size(404, 121);
+            this.picTestFont.Size = new System.Drawing.Size(404, 90);
             this.picTestFont.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picTestFont.TabIndex = 13;
             this.picTestFont.TabStop = false;
@@ -247,6 +256,9 @@
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox2.Controls.Add(this.lblWidthRatio);
+            this.groupBox2.Controls.Add(this.tbWidthRatio);
+            this.groupBox2.Controls.Add(this.label8);
             this.groupBox2.Controls.Add(this.SmallLetterCheckBox);
             this.groupBox2.Controls.Add(this.groupBox4);
             this.groupBox2.Controls.Add(this.MaxCustomWidthTextBox);
@@ -268,7 +280,7 @@
             this.SmallLetterCheckBox.AutoSize = true;
             this.SmallLetterCheckBox.Checked = true;
             this.SmallLetterCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.SmallLetterCheckBox.Location = new System.Drawing.Point(17, 206);
+            this.SmallLetterCheckBox.Location = new System.Drawing.Point(17, 237);
             this.SmallLetterCheckBox.Name = "SmallLetterCheckBox";
             this.SmallLetterCheckBox.Size = new System.Drawing.Size(143, 17);
             this.SmallLetterCheckBox.TabIndex = 6;
@@ -285,9 +297,9 @@
             this.groupBox4.Controls.Add(this.picTestFont);
             this.groupBox4.Controls.Add(this.TestPhraseTextBox);
             this.groupBox4.Controls.Add(this.TestPhrase2TextBox);
-            this.groupBox4.Location = new System.Drawing.Point(7, 229);
+            this.groupBox4.Location = new System.Drawing.Point(7, 260);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(433, 238);
+            this.groupBox4.Size = new System.Drawing.Size(433, 207);
             this.groupBox4.TabIndex = 5;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Font Demonstration";
@@ -430,10 +442,34 @@
             this.label7.TabIndex = 22;
             this.label7.Text = "Custom Symbol Components";
             // 
-            // StatusProgressBar
+            // label8
             // 
-            this.StatusProgressBar.Name = "StatusProgressBar";
-            this.StatusProgressBar.Size = new System.Drawing.Size(100, 16);
+            this.label8.Location = new System.Drawing.Point(14, 206);
+            this.label8.Margin = new System.Windows.Forms.Padding(0);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(168, 20);
+            this.label8.TabIndex = 8;
+            this.label8.Text = "Glyph Width Influence Ratio:";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // tbWidthRatio
+            // 
+            this.tbWidthRatio.Location = new System.Drawing.Point(188, 206);
+            this.tbWidthRatio.Maximum = 20;
+            this.tbWidthRatio.Name = "tbWidthRatio";
+            this.tbWidthRatio.Size = new System.Drawing.Size(236, 45);
+            this.tbWidthRatio.TabIndex = 9;
+            this.tbWidthRatio.Value = 14;
+            this.tbWidthRatio.Scroll += new System.EventHandler(this.tbWidthRatio_Scroll);
+            // 
+            // lblWidthRatio
+            // 
+            this.lblWidthRatio.Location = new System.Drawing.Point(188, 241);
+            this.lblWidthRatio.Name = "lblWidthRatio";
+            this.lblWidthRatio.Size = new System.Drawing.Size(236, 16);
+            this.lblWidthRatio.TabIndex = 10;
+            this.lblWidthRatio.Text = "0,7";
+            this.lblWidthRatio.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
             // MainForm
             // 
@@ -469,6 +505,7 @@
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.tbWidthRatio)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -510,6 +547,9 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ToolStripProgressBar StatusProgressBar;
+        private System.Windows.Forms.TrackBar tbWidthRatio;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label lblWidthRatio;
     }
 }
 
