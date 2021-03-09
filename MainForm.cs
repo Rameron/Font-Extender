@@ -225,6 +225,11 @@ namespace Font_Extender
                 StatusBar.Text = "Cannot start processing: 'MaxCustomWidthTextBox' field has invalid value. It should be decimal number.";
                 return;
             }
+            if (ReplaceManualCheckBox.Checked && TextFilesList.Items.Count == 0)
+            {
+                StatusBar.Text = "Cannot start processing: replace for manual mode enabled but file(s) not selected.";
+                return;
+            }
 
             StatusBar.Text = "Processing, please wait...";
 
@@ -261,6 +266,22 @@ namespace Font_Extender
                     return;
                 }
                 ttxManager.SaveChanges();
+
+
+                if (ReplaceManualCheckBox.Checked)
+                {
+                    string textForReplace = string.Join("", PlannedGlyphSymbolsList.Items.Cast<string>()).Replace("<пробел>", " ");
+
+                    var analyzer = new TextAnalyzer(
+                        TextFilesList.Items.Cast<string>().ToArray(),
+                        Encoding.UTF8,
+                        SmallLetterCheckBox.Checked,
+                        Math.Round((100.0 - (tbWidthRatio.Value * 5)) / 100.0, 2),
+                        Math.Round(tbWidthRatio.Value * 5 / 100.0, 2));
+
+                    analyzer.ReplaceWithSymbol(textForReplace, (char)int.Parse(glyphUniIndex.Substring(3), System.Globalization.NumberStyles.HexNumber));
+                    analyzer.SaveChanges();
+                }
 
                 foreach (var item in PlannedGlyphSymbolsList.Items)
                 {

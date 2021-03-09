@@ -48,6 +48,9 @@
             this.TestPhraseTextBox = new System.Windows.Forms.TextBox();
             this.TestPhrase2TextBox = new System.Windows.Forms.TextBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.lblWidthRatio = new System.Windows.Forms.Label();
+            this.tbWidthRatio = new System.Windows.Forms.TrackBar();
+            this.label8 = new System.Windows.Forms.Label();
             this.SmallLetterCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
@@ -64,16 +67,14 @@
             this.SymbolsList = new System.Windows.Forms.ListBox();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.tbWidthRatio = new System.Windows.Forms.TrackBar();
-            this.lblWidthRatio = new System.Windows.Forms.Label();
+            this.ReplaceManualCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.StatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picTestFont)).BeginInit();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tbWidthRatio)).BeginInit();
             this.groupBox4.SuspendLayout();
             this.groupBox3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.tbWidthRatio)).BeginInit();
             this.SuspendLayout();
             // 
             // AddLetter
@@ -224,7 +225,7 @@
             this.picTestFont.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.picTestFont.Location = new System.Drawing.Point(13, 101);
             this.picTestFont.Name = "picTestFont";
-            this.picTestFont.Size = new System.Drawing.Size(404, 90);
+            this.picTestFont.Size = new System.Drawing.Size(404, 67);
             this.picTestFont.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picTestFont.TabIndex = 13;
             this.picTestFont.TabStop = false;
@@ -256,6 +257,7 @@
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox2.Controls.Add(this.ReplaceManualCheckBox);
             this.groupBox2.Controls.Add(this.lblWidthRatio);
             this.groupBox2.Controls.Add(this.tbWidthRatio);
             this.groupBox2.Controls.Add(this.label8);
@@ -274,6 +276,35 @@
             this.groupBox2.TabIndex = 17;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "General options and replace mode";
+            // 
+            // lblWidthRatio
+            // 
+            this.lblWidthRatio.Location = new System.Drawing.Point(188, 241);
+            this.lblWidthRatio.Name = "lblWidthRatio";
+            this.lblWidthRatio.Size = new System.Drawing.Size(236, 16);
+            this.lblWidthRatio.TabIndex = 10;
+            this.lblWidthRatio.Text = "0,7";
+            this.lblWidthRatio.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // tbWidthRatio
+            // 
+            this.tbWidthRatio.Location = new System.Drawing.Point(188, 206);
+            this.tbWidthRatio.Maximum = 20;
+            this.tbWidthRatio.Name = "tbWidthRatio";
+            this.tbWidthRatio.Size = new System.Drawing.Size(236, 45);
+            this.tbWidthRatio.TabIndex = 9;
+            this.tbWidthRatio.Value = 14;
+            this.tbWidthRatio.Scroll += new System.EventHandler(this.tbWidthRatio_Scroll);
+            // 
+            // label8
+            // 
+            this.label8.Location = new System.Drawing.Point(14, 206);
+            this.label8.Margin = new System.Windows.Forms.Padding(0);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(168, 20);
+            this.label8.TabIndex = 8;
+            this.label8.Text = "Glyph Width Influence Ratio:";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // SmallLetterCheckBox
             // 
@@ -297,9 +328,9 @@
             this.groupBox4.Controls.Add(this.picTestFont);
             this.groupBox4.Controls.Add(this.TestPhraseTextBox);
             this.groupBox4.Controls.Add(this.TestPhrase2TextBox);
-            this.groupBox4.Location = new System.Drawing.Point(7, 260);
+            this.groupBox4.Location = new System.Drawing.Point(7, 283);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(433, 207);
+            this.groupBox4.Size = new System.Drawing.Size(433, 184);
             this.groupBox4.TabIndex = 5;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Font Demonstration";
@@ -442,34 +473,17 @@
             this.label7.TabIndex = 22;
             this.label7.Text = "Custom Symbol Components";
             // 
-            // label8
+            // ReplaceManualCheckBox
             // 
-            this.label8.Location = new System.Drawing.Point(14, 206);
-            this.label8.Margin = new System.Windows.Forms.Padding(0);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(168, 20);
-            this.label8.TabIndex = 8;
-            this.label8.Text = "Glyph Width Influence Ratio:";
-            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // tbWidthRatio
-            // 
-            this.tbWidthRatio.Location = new System.Drawing.Point(188, 206);
-            this.tbWidthRatio.Maximum = 20;
-            this.tbWidthRatio.Name = "tbWidthRatio";
-            this.tbWidthRatio.Size = new System.Drawing.Size(236, 45);
-            this.tbWidthRatio.TabIndex = 9;
-            this.tbWidthRatio.Value = 14;
-            this.tbWidthRatio.Scroll += new System.EventHandler(this.tbWidthRatio_Scroll);
-            // 
-            // lblWidthRatio
-            // 
-            this.lblWidthRatio.Location = new System.Drawing.Point(188, 241);
-            this.lblWidthRatio.Name = "lblWidthRatio";
-            this.lblWidthRatio.Size = new System.Drawing.Size(236, 16);
-            this.lblWidthRatio.TabIndex = 10;
-            this.lblWidthRatio.Text = "0,7";
-            this.lblWidthRatio.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.ReplaceManualCheckBox.AutoSize = true;
+            this.ReplaceManualCheckBox.Checked = true;
+            this.ReplaceManualCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ReplaceManualCheckBox.Location = new System.Drawing.Point(17, 260);
+            this.ReplaceManualCheckBox.Name = "ReplaceManualCheckBox";
+            this.ReplaceManualCheckBox.Size = new System.Drawing.Size(174, 17);
+            this.ReplaceManualCheckBox.TabIndex = 11;
+            this.ReplaceManualCheckBox.Text = "Replace letters in manual mode";
+            this.ReplaceManualCheckBox.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
@@ -502,10 +516,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.picTestFont)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tbWidthRatio)).EndInit();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.tbWidthRatio)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -550,6 +564,7 @@
         private System.Windows.Forms.TrackBar tbWidthRatio;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label lblWidthRatio;
+        private System.Windows.Forms.CheckBox ReplaceManualCheckBox;
     }
 }
 
